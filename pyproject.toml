@@ -1,0 +1,18 @@
+[project]
+name = "cortexhub-examples"
+version = "0.0.0"
+description = "CortexHub SDK Examples - single-project setup"
+requires-python = ">=3.11,<3.13"
+
+[project.urls]
+Repository = "https://github.com/CortexHub-AI/examples"
+Issues = "https://github.com/CortexHub-AI/examples/issues"
+
+# All examples share one environment
+dependencies = [
+    "cortexhub[all]>=0.1.16",
+]
+
+[tool.uv.sources]
+# Override cortexhub to use local SDK (uncomment when needed)
+# cortexhub = { path = "../sdks/python", editable = true }
