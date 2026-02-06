@@ -6,7 +6,7 @@ requires-python = ">=3.11,<3.13"
 
 # All examples share one environment
 dependencies = [
-    "cortexhub[all]>=0.1.19",
+    "cortexhub[all]>=0.1.20",
 ]
 
 [project.urls]
