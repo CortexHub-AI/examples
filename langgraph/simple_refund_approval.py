@@ -16,7 +16,9 @@ from typing import TypedDict, Annotated, Literal
 from operator import add
 
 from dotenv import load_dotenv
-load_dotenv()
+
+load_dotenv(override=True)
+print(f"[env] CORTEXHUB_PRIVACY={os.getenv('CORTEXHUB_PRIVACY')}")
 
 # -----------------------------------------------------------------------------
 # CortexHub: 2-line integration
@@ -26,7 +28,6 @@ import cortexhub
 cortex = cortexhub.init(
     "refund-approval-demo",
     framework=cortexhub.Framework.LANGGRAPH,
-    privacy=False,  # OFF for demo clarity
 )
 
 # -----------------------------------------------------------------------------

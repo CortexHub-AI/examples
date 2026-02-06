@@ -3,6 +3,12 @@
 
 .PHONY: help sync use-local-sdk use-published-sdk langgraph crewai openai-agents claude-agents run-all clean
 
+LOCAL_SDK_PATH := ../sdks/python/src
+LOCAL_SDK_MARKER := .local-sdk
+ifneq ($(wildcard $(LOCAL_SDK_MARKER)),)
+SDK_PYTHONPATH := PYTHONPATH=$(LOCAL_SDK_PATH)
+endif
+
 help:
 	@echo "CortexHub Examples (single project)"
 	@echo ""
@@ -27,34 +33,39 @@ help:
 sync:
 	@echo "Installing example dependencies..."
 	uv sync
+	@if [ -f .local-sdk ]; then \
+		uv pip install -e "../sdks/python[all]" --reinstall; \
+	fi
 
 use-local-sdk:
 	@echo "Switching cortexhub to local editable SDK..."
-	uv pip install -e ../sdks/python --reinstall
+	@touch .local-sdk
+	uv pip install -e "../sdks/python[all]" --reinstall
 
 use-published-sdk:
 	@echo "Switching cortexhub to published SDK..."
-	uv pip install "cortexhub[all]>=0.1.7" --reinstall
+	@rm -f .local-sdk
+	uv pip install "cortexhub[all]>=0.1.19" --reinstall
 
 simple-refund: sync
 	@echo "Running Simple Refund Approval..."
-	uv run python langgraph/simple_refund_approval.py
+	$(SDK_PYTHONPATH) uv run python langgraph/simple_refund_approval.py
 
 langgraph: sync
 	@echo "Running LangGraph Customer Support Agent..."
-	uv run python langgraph/main.py
+	$(SDK_PYTHONPATH) uv run python langgraph/main.py
 
 crewai: sync
 	@echo "Running CrewAI Financial Operations Team..."
-	uv run python crewai/main.py
+	$(SDK_PYTHONPATH) uv run python crewai/main.py
 
 openai-agents: sync
 	@echo "Running OpenAI Agents Research Assistant..."
-	uv run python openai-agents/main.py
+	$(SDK_PYTHONPATH) uv run python openai-agents/main.py
 
 claude-agents: sync
 	@echo "Running Claude Agent SDK DevOps Assistant..."
-	uv run python claude-agents/main.py
+	$(SDK_PYTHONPATH) uv run python claude-agents/main.py
 
 # Run all examples
 run-all: langgraph crewai openai-agents claude-agents

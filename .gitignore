@@ -29,6 +29,10 @@ env/
 # uv
 uv.lock
 
+# Local overrides
+Makefile
+.local-sdk
+
 # Environment files
 .env
 .env.local
