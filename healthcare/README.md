@@ -12,7 +12,7 @@ This folder contains a **single-agent patient intake scenario** implemented in a
 
 ```bash
 uv run python healthcare/langgraph_example.py
-uv run python healthcare/crewai.py
+uv run python healthcare/crewai_example.py
 uv run python healthcare/openai_agents.py
 uv run python healthcare/claude_agents.py
 ```

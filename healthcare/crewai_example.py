@@ -2,7 +2,7 @@
 
 Single-run example for governance before/after policies.
 Run:
-    uv run python healthcare/crewai.py
+    uv run python healthcare/crewai_example.py
 """
 
 import os
@@ -25,6 +25,7 @@ cortex = cortexhub.init("healthcare-intake-crewai", cortexhub.Framework.CREWAI, 
 # CrewAI imports (after CortexHub init)
 # -----------------------------------------------------------------------------
 from crewai import Agent, Task, Crew, Process
+from crewai.agents.parser import OutputParserException
 from crewai.tools import tool
 
 
@@ -109,6 +110,10 @@ def run_demo() -> None:
         print(f"\nApproval status: {status}")
     except cortexhub.PolicyViolationError as e:
         print(f"\nBLOCKED BY CORTEXHUB: {e}")
+    except cortexhub.CircuitBreakError as e:
+        print(f"\nCIRCUIT BREAKER: {e}")
+    except OutputParserException as e:
+        print(f"\nCREWAI PARSER ERROR: {e}")
 
 
 def main() -> None:

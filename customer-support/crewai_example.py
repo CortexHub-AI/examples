@@ -1,15 +1,14 @@
-"""Finance refund agent (CrewAI) with CortexHub.
+"""Customer support agent (CrewAI) with CortexHub.
 
 Single-run example for governance before/after policies.
 Run:
-    uv run python finance/crewai.py
+    uv run python customer-support/crewai_example.py
 """
 
 import os
 import time
 import json
 import urllib.request
-from decimal import Decimal, InvalidOperation
 
 from dotenv import load_dotenv
 
@@ -20,31 +19,37 @@ load_dotenv(override=True)
 # -----------------------------------------------------------------------------
 import cortexhub
 
-cortex = cortexhub.init("finance-refund-crewai", cortexhub.Framework.CREWAI, privacy=False)
+cortex = cortexhub.init("customer-support-crewai", cortexhub.Framework.CREWAI, privacy=False)
 
 # -----------------------------------------------------------------------------
 # CrewAI imports (after CortexHub init)
 # -----------------------------------------------------------------------------
 from crewai import Agent, Task, Crew, Process
+from crewai.agents.parser import OutputParserException
 from crewai.tools import tool
 
 
 @tool
-def issue_refund(order_id: str, amount: int, reason: str) -> dict:
-    """Issue a refund for an order."""
-    try:
-        decimal_amount = Decimal(str(amount))
-    except InvalidOperation:
-        return {"success": False, "error": f"Invalid amount: {amount}"}
-    quantized = decimal_amount.quantize(Decimal("0.01"))
-    amount_str = f"{quantized:.2f}"
+def lookup_customer(customer_id: str) -> dict:
+    """Look up customer information by ID."""
+    return {
+        "id": customer_id,
+        "name": "Jamie Lee",
+        "email": "jamie.lee@example.com",
+        "status": "active",
+        "plan": "premium",
+    }
+
+
+@tool
+def cancel_subscription(customer_id: str, reason: str, immediate: bool = False) -> dict:
+    """Cancel a customer's subscription."""
     return {
         "success": True,
-        "order_id": order_id,
-        "amount": amount_str,
+        "customer_id": customer_id,
         "reason": reason,
-        "transaction_id": f"ref_{order_id}_{int(quantized * 100)}",
-        "message": f"Refund of ${amount_str} processed for order {order_id}",
+        "effective": "immediately" if immediate else "end_of_billing_period",
+        "message": f"Cancellation scheduled for {customer_id}",
     }
 
 
@@ -66,20 +71,19 @@ def _wait_for_approval(approval_id: str) -> str | None:
 
 def run_demo() -> None:
     agent = Agent(
-        role="Refund Agent",
-        goal="Process refund requests accurately and safely.",
-        backstory="You handle refunds and must follow governance rules.",
-        tools=[issue_refund],
+        role="Customer Support Agent",
+        goal="Handle customer requests safely and accurately.",
+        backstory="You handle subscription changes and must follow governance rules.",
+        tools=[lookup_customer, cancel_subscription],
         verbose=True,
     )
 
     task = Task(
         description=(
-            "Process a refund for order ord_67890 amount $750 due to damage. "
-            "Customer name Jane Doe, email jane.doe@company.com. "
-            "Call issue_refund with the order_id, amount, and reason."
+            "Look up customer cust_123, then cancel the subscription because they are moving. "
+            "Customer email: jamie.lee@example.com."
         ),
-        expected_output="Refund confirmation or a governance block/approval.",
+        expected_output="Cancellation confirmation or a governance block/approval.",
         agent=agent,
     )
 
@@ -105,11 +109,15 @@ def run_demo() -> None:
         print(f"\nApproval status: {status}")
     except cortexhub.PolicyViolationError as e:
         print(f"\nBLOCKED BY CORTEXHUB: {e}")
+    except cortexhub.CircuitBreakError as e:
+        print(f"\nCIRCUIT BREAKER: {e}")
+    except OutputParserException as e:
+        print(f"\nCREWAI PARSER ERROR: {e}")
 
 
 def main() -> None:
     print("\n" + "=" * 60)
-    print("Finance Refund Agent (CrewAI)")
+    print("Customer Support Agent (CrewAI)")
     print("Run once without policies, then enable recommendations and rerun.")
     print("=" * 60)
     run_demo()

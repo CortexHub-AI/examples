@@ -12,7 +12,7 @@ This folder contains a **single-agent refund scenario** implemented in all four 
 
 ```bash
 uv run python finance/langgraph_example.py
-uv run python finance/crewai.py
+uv run python finance/crewai_example.py
 uv run python finance/openai_agents.py
 uv run python finance/claude_agents.py
 ```

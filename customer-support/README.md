@@ -12,7 +12,7 @@ This folder contains a **single-agent subscription cancellation scenario** imple
 
 ```bash
 uv run python customer-support/langgraph_example.py
-uv run python customer-support/crewai.py
+uv run python customer-support/crewai_example.py
 uv run python customer-support/openai_agents.py
 uv run python customer-support/claude_agents.py
 ```

@@ -6,13 +6,18 @@ requires-python = ">=3.11,<3.13"
 
 # All examples share one environment
 dependencies = [
-    "cortexhub[all]>=0.1.20",
+    "cortexhub[all]>=0.1.22",
+    "langchain-core>=0.2.0",
+    "langchain-openai>=0.1.0",
+    "langgraph>=0.2.0",
+    "crewai>=0.50.0,<1.0.0",
+    "litellm>=1.81.5",
+    "openai-agents>=0.0.3",
+    "anthropic>=0.40.0",
+    "claude-agent-sdk>=0.0.1",
 ]
 
 [project.urls]
 Repository = "https://github.com/CortexHub-AI/examples"
 Issues = "https://github.com/CortexHub-AI/examples/issues"
 
-[tool.uv.sources]
-# Override cortexhub to use local SDK (uncomment when needed)
-# cortexhub = { path = "../sdks/python", editable = true }

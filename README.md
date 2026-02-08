@@ -2,6 +2,8 @@
 
 Production-ready examples showing CortexHub governance for AI agentic frameworks.
 
+These examples are intended for customer usage and install CortexHub from PyPI.
+
 All examples share a **single uv project** so you install dependencies once.
 
 ## Supported Frameworks
@@ -12,6 +14,7 @@ All examples share a **single uv project** so you install dependencies once.
 | [CrewAI](./crewai/) | Financial Operations Team | Multi-agent crew for financial transactions |
 | [OpenAI Agents](./openai-agents/) | Research Assistant | Multi-turn research with web search |
 | [Claude Agents](./claude-agents/) | DevOps Assistant | MCP tools with deployment workflows |
+| [Safety Policies](./safety/) | Safety Controls | Policy-driven controls for sensitive tools |
 
 ## Domain Compliance Journeys (Single-Agent)
 
@@ -99,7 +102,7 @@ cortexhub-examples/
 ├── claude-agents/       # Framework example
 ├── healthcare/          # Domain journey (all frameworks)
 ├── finance/             # Domain journey (all frameworks)
-└── customer-support/    # Domain journey (all frameworks)
+├── customer-support/    # Domain journey (all frameworks)
 ```
 
 ## Running All Examples
@@ -117,6 +120,7 @@ make langgraph
 make crewai
 make openai-agents
 make claude-agents
+make safety
 ```
 
 ## Webhook Approvals (Local)
@@ -158,5 +162,4 @@ uv run python main.py
 ## Links
 
 - [CortexHub Documentation](https://docs.cortexhub.ai)
-- [CortexHub SDK](https://github.com/cortexhub/sdks)
 - [Dashboard](https://app.cortexhub.ai)
