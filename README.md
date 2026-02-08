@@ -123,25 +123,6 @@ make claude-agents
 make safety
 ```
 
-## Webhook Approvals (Local)
-
-If you run `make webhook-server`, approval requests will hit the local server.
-To approve/deny from the CLI, the webhook server must authenticate with the
-backend using an API key. The webhook server loads `.env` automatically
-via `python-dotenv`, just like the other examples.
-
-```bash
-export CORTEXHUB_API_KEY=ch_live_your-api-key
-make webhook-server
-```
-
-Then approve by ID or index:
-
-```bash
-approve apr_xxx
-approve 1
-```
-
 ## Creating Your Own Agent
 
 Use any example as a template:
