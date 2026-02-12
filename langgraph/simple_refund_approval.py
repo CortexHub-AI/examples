@@ -3,8 +3,10 @@ Minimal LangGraph refund + approval flow (demo-safe, single approval).
 
 Key properties:
 - One approval only
-- No replay of tool calls
+- Uses checkpointing to resume after approval
 - Clean interception → approve → resume narrative
+
+Tip: Install a Policy Pack in the dashboard to test enforcement.
 """
 
 import os
@@ -17,7 +19,7 @@ from operator import add
 
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(override=not os.getenv("CORTEXHUB_E2E_RUN_ID"))
 print(f"[env] CORTEXHUB_PRIVACY={os.getenv('CORTEXHUB_PRIVACY')}")
 
 # -----------------------------------------------------------------------------
@@ -28,6 +30,9 @@ import cortexhub
 cortex = cortexhub.init(
     "refund-approval-demo",
     framework=cortexhub.Framework.LANGGRAPH,
+    log_level="INFO",
+    log_file="./cortexhub.log",
+    log_to_console=True,
 )
 
 # -----------------------------------------------------------------------------
@@ -38,6 +43,7 @@ from langchain_core.messages import HumanMessage, BaseMessage
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
+from langgraph.checkpoint.memory import MemorySaver
 
 
 # -----------------------------------------------------------------------------
@@ -122,7 +128,9 @@ def build_workflow():
 
     workflow.add_edge("refund_tools", "refund_agent")
 
-    return workflow.compile()
+    # Use memory checkpointing to allow resuming after approval
+    memory = MemorySaver()
+    return workflow.compile(checkpointer=memory)
 
 
 # -----------------------------------------------------------------------------
@@ -149,42 +157,61 @@ def wait_for_approval(approval_id: str) -> str | None:
 
 
 # -----------------------------------------------------------------------------
-# Demo runner (IMPORTANT PART)
+# Demo runner
 # -----------------------------------------------------------------------------
 def run_refund_demo(query: str) -> None:
     app = build_workflow()
+    
+    thread_id = "refund_demo_thread"
+    config = {"configurable": {"thread_id": thread_id}}
 
     state = {
         "messages": [HumanMessage(content=query)]
     }
 
     try:
-        result = app.invoke(state)
+        result = app.invoke(state, config)
         final = result["messages"][-1]
+        print("\n=== FINAL RESPONSE ===")
         print(final.content)
         return
 
     except cortexhub.ApprovalRequiredError as e:
-        print("\nAPPROVAL REQUIRED")
+        print("\n=== APPROVAL REQUIRED ===")
         print(f"- approval_id: {e.approval_id}")
         print(f"- tool: {e.tool_name}")
+        print(f"- args: {e.tool_args}")
         print(f"- reason: {e.reason}")
 
         status = wait_for_approval(e.approval_id)
 
         if status == "approved":
-            print("\nAPPROVED — execution will resume once")
-            # IMPORTANT:
-            # For demo clarity, we DO NOT replay the graph.
-            # CortexHub has already recorded the approval.
-            # In real systems, you would resume from a checkpoint.
-            return
+            print("\n=== APPROVED — MARKING APPROVAL AND RESUMING ===")
+            # Mark the approval as granted in the SDK
+            # This prevents re-evaluation when resuming the graph
+            if e.context_hash:
+                cortex.mark_approval_granted(e.approval_id, e.context_hash)
+            
+            # Resume execution from checkpoint - SDK will now allow the tool call
+            print("\n=== RESUMING EXECUTION ===")
+            try:
+                result = app.invoke(None, config)
+                final = result["messages"][-1]
+                print("\n=== FINAL RESPONSE (AFTER APPROVAL) ===")
+                print(final.content)
+                return
+            except Exception as resume_error:
+                print(f"\nError resuming after approval: {resume_error}")
+                import traceback
+                traceback.print_exc()
+                return
 
-        print("\nNOT APPROVED — execution cancelled")
+        print("\n=== NOT APPROVED — EXECUTION CANCELLED ===")
         return
 
     except cortexhub.PolicyViolationError as e:
-        print(f"\nBLOCKED BY CORTEXHUB: {e}")
+        print(f"\n=== BLOCKED BY CORTEXHUB ===")
+        print(f"Reason: {e}")
         return
 
 
@@ -199,7 +226,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as exc:
-        print(f"\nExample failed: {exc}")
+    main()
